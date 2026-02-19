@@ -1,9 +1,12 @@
 import json
 import asyncio
+import logging
 from openai import AsyncOpenAI
 from backend.llm import get_openrouter_client
 from backend.config import get_settings
 from backend.utils import retry
+
+logger = logging.getLogger(__name__)
 
 
 DETAILED_PROMPT = """You are an expert academic paper analyst. Analyze the following paper thoroughly and provide a detailed summary in Korean. Cover all these aspects:
@@ -27,7 +30,8 @@ BULLET_PROMPT = """Based on the following detailed paper analysis, create a brie
 
 {detailed_summary}
 
-Provide 3-5 bullet points in markdown format:"""
+Provide 3-5 bullet points in markdown format. 
+IMPORTANT: Only return the bullet points, no introductory text or explanations. Start directly with the bullet points."""
 
 TRANSLATE_PROMPT = """Translate the following academic paper analysis to Korean. 
 - Keep all technical terminologies in English
@@ -94,20 +98,42 @@ async def generate_three_line_summary(detailed_summary: str) -> str:
 @retry(max_attempts=3, delay=2.0)
 async def generate_bullet_summary(detailed_summary: str) -> list[str]:
     client = get_openrouter_client()
-    response = await client.chat.completions.create(
-        model="arcee-ai/trinity-mini:free",
-        messages=[
-            {
-                "role": "system",
-                "content": "You are a helpful assistant that summarizes in Korean.",
-            },
-            {
-                "role": "user",
-                "content": BULLET_PROMPT.format(detailed_summary=detailed_summary),
-            },
-        ],
-    )
-    content = response.choices[0].message.content or ""
+
+    for attempt in range(3):
+        response = await client.chat.completions.create(
+            model="arcee-ai/trinity-mini:free",
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are a helpful assistant that summarizes in Korean.",
+                },
+                {
+                    "role": "user",
+                    "content": BULLET_PROMPT.format(detailed_summary=detailed_summary),
+                },
+            ],
+        )
+        content = response.choices[0].message.content or ""
+
+        # Filter to only include lines starting with "- " (markdown bullet format)
+        lines = [
+            line.strip()[2:].strip()
+            for line in content.split("\n")
+            if line.strip().startswith("- ")
+        ]
+
+        if lines:
+            logger.info(
+                f"Bullet summary generated successfully on attempt {attempt + 1}"
+            )
+            return lines
+
+        logger.warning(
+            f"No valid bullet points found on attempt {attempt + 1}, retrying..."
+        )
+
+    # Fallback: return all non-empty lines if still no valid bullets after 3 retries
+    logger.warning("No valid bullet points found after 3 retries, using fallback")
     lines = [line.strip() for line in content.split("\n") if line.strip()]
     return lines
 
