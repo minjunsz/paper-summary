@@ -18,5 +18,5 @@ dependencies = [
 ]
 
 [tool.pyright]
-venvPath = "."        # 현재 디렉토리에서 venv를 찾음
-venv = ".venv"        # 가상환경 폴더 이름
+venvPath = "."
+venv = ".venv"

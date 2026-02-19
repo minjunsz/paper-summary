@@ -98,6 +98,7 @@ async def generate_three_line_summary(detailed_summary: str) -> str:
 @retry(max_attempts=3, delay=2.0)
 async def generate_bullet_summary(detailed_summary: str) -> list[str]:
     client = get_openrouter_client()
+    content = ""
 
     for attempt in range(3):
         response = await client.chat.completions.create(

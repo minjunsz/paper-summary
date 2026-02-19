@@ -35,16 +35,22 @@ async def fetch_arxiv_metadata(arxiv_id: str) -> ArxivMetadata:
     if entry is None:
         raise ValueError(f"No entry found for arxiv_id: {arxiv_id}")
 
-    title = entry.find("{http://www.w3.org/2005/Atom}title").text.strip()
+    title_elem = entry.find("{http://www.w3.org/2005/Atom}title")
+    if title_elem is None or title_elem.text is None:
+        raise ValueError(f"No title found for arxiv_id: {arxiv_id}")
+    title = title_elem.text.strip()
     title = re.sub(r"\s+", " ", title)
 
-    abstract = entry.find("{http://www.w3.org/2005/Atom}summary").text.strip()
+    abstract_elem = entry.find("{http://www.w3.org/2005/Atom}summary")
+    if abstract_elem is None or abstract_elem.text is None:
+        raise ValueError(f"No abstract found for arxiv_id: {arxiv_id}")
+    abstract = abstract_elem.text.strip()
     abstract = re.sub(r"\s+", " ", abstract)
 
     authors = []
     for author in entry.findall("{http://www.w3.org/2005/Atom}author"):
         name = author.find("{http://www.w3.org/2005/Atom}name")
-        if name is not None:
+        if name is not None and name.text is not None:
             authors.append(name.text.strip())
 
     return ArxivMetadata(
