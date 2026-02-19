@@ -43,6 +43,17 @@ def get_all_papers():
         return []
 
 
+def search_papers(query: str):
+    try:
+        resp = httpx.get(
+            f"{API_BASE}/api/papers/search", params={"q": query}, timeout=30
+        )
+        resp.raise_for_status()
+        return resp.json().get("papers", [])
+    except Exception as e:
+        return []
+
+
 def check_health():
     try:
         resp = httpx.get(f"{API_BASE}/api/health", timeout=10)
@@ -145,10 +156,28 @@ with tab1:
 
 with tab2:
     st.subheader("Saved Papers")
-    papers = get_all_papers()
+
+    search_query = st.text_input(
+        "Search papers",
+        placeholder="Search by title, abstract, or summary...",
+        key="paper_search",
+    )
+
+    if search_query and len(search_query.strip()) >= 2:
+        papers = search_papers(search_query)
+        search_info = f'Search results for "{search_query}"'
+    else:
+        papers = get_all_papers()
+        search_info = None
+
+    if search_info:
+        st.caption(search_info)
 
     if not papers:
-        st.info("No papers saved yet.")
+        if search_info:
+            st.info(f"No papers found for query: {search_query}")
+        else:
+            st.info("No papers saved yet.")
     else:
         for paper in papers:
             with st.expander(f"{paper.get('title', paper.get('arxiv_id'))}"):

@@ -4,6 +4,7 @@ from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
+from rank_bm25 import BM25Okapi
 
 from backend.database import init_db, get_db, Paper
 from backend.arxiv import extract_arxiv_id, fetch_arxiv_metadata
@@ -194,5 +195,59 @@ async def list_papers(db: Session = Depends(get_db)):
                 created_at=p.created_at,
             )
             for p in papers
+        ]
+    )
+
+
+def tokenize(text: str) -> list[str]:
+    if not text:
+        return []
+    return text.lower().split()
+
+
+@app.get("/api/papers/search", response_model=PaperListResponse)
+async def search_papers(q: str, limit: int = 20, db: Session = Depends(get_db)):
+    if not q or len(q.strip()) < 2:
+        return PaperListResponse(papers=[])
+
+    papers = db.query(Paper).all()
+    if not papers:
+        return PaperListResponse(papers=[])
+
+    corpus = []
+    for p in papers:
+        text_parts = [
+            p.title or "",
+            p.abstract or "",
+            p.detailed_summary or "",
+            p.three_line_summary or "",
+            " ".join(p.get_authors_list()),
+        ]
+        corpus.append(" ".join(text_parts))
+
+    tokenized_corpus = [tokenize(doc) for doc in corpus]
+    bm25 = BM25Okapi(tokenized_corpus)
+
+    query_tokens = tokenize(q)
+    scores = bm25.get_scores(query_tokens)
+
+    scored_papers = list(zip(papers, scores))
+    scored_papers.sort(key=lambda x: x[1], reverse=True)
+
+    top_papers = [p for p, score in scored_papers[:limit] if score > 0]
+
+    return PaperListResponse(
+        papers=[
+            PaperResponse(
+                arxiv_id=p.arxiv_id,
+                title=p.title,
+                authors=p.get_authors_list(),
+                abstract=p.abstract or "",
+                detailed_summary=p.detailed_summary,
+                three_line_summary=p.three_line_summary,
+                bullet_summary=p.get_bullet_summary_list(),
+                created_at=p.created_at,
+            )
+            for p in top_papers
         ]
     )
