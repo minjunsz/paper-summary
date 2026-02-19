@@ -2,10 +2,13 @@
 
 ## User Story
 
-1.  prompt with arxiv link
+1. prompt with arxiv link
     1. User gives an arxiv link (e.g. `https://arxiv.org/abs/2602.16705`) or arxiv ID (e.g. `2602.16705`).
     2. The program automatically downloads the pdf file and parse it into text.
     3. LLM with openrouter will be used to summarize the paper.
+       1. First, generate a thorough paper analysis using `arcee-ai/trinity-large-preview:free` model, covering: tackling problem, core idea, key contributions, methodologies, analysis/limitations, and other noteworthy points.
+       2. Then, translate the detailed analysis to Korean using `arcee-ai/trinity-large-preview:free`. Keep technical terminologies in English, translate all other terms to Korean.
+       3. Finally, summarize the translated detailed analysis into 3 lines and brief bullet points using `arcee-ai/trinity-mini:free` model.
 2. More user stories will be added later.
 
 ## How LLM should works
@@ -21,10 +24,11 @@ Openrouter API key will be provided by .env file.
     - methodologies (including details)
     - analysis or limitations
     - any other paper specific noteworthy points
-2. summarize the detailed analysis into 3 lines with `arcee-ai/trinity-mini:free` model.
-3. summarize the detailed analysis into brief summary using bullet points with `arcee-ai/trinity-mini:free` model.
+2. Translate the detailed analysis to Korean using `arcee-ai/trinity-large-preview:free`. Keep technical terminologies in English, translate all other terms to Korean.
+3. summarize the translated detailed analysis into 3 lines with `arcee-ai/trinity-mini:free` model.
+4. summarize the translated detailed analysis into brief summary using bullet points with `arcee-ai/trinity-mini:free` model.
 
-All three results (detailed analysis, 3 lines summary, and bullet-point summary) should be written in Korean.
+All three results (detailed analysis in Korean, 3 lines summary, and bullet-point summary) should be written in Korean (except technical terminologies).
 
 ## UI Requirements
 

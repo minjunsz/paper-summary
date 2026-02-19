@@ -29,6 +29,16 @@ BULLET_PROMPT = """Based on the following detailed paper analysis, create a brie
 
 Provide 3-5 bullet points in markdown format:"""
 
+TRANSLATE_PROMPT = """Translate the following academic paper analysis to Korean. 
+- Keep all technical terminologies in English
+- Translate all non-technical terms, sentences, and explanations to Korean
+- Preserve all markdown formatting (## headers, **bold**, bullet points, etc.)
+
+Original text:
+{text}
+
+Provide the Korean translation:"""
+
 
 @retry(max_attempts=3, delay=2.0)
 async def generate_detailed_summary(paper_text: str) -> str:
@@ -40,7 +50,26 @@ async def generate_detailed_summary(paper_text: str) -> str:
             {"role": "user", "content": f"{DETAILED_PROMPT}\n\n{paper_text[:15000]}"},
         ],
     )
-    return response.choices[0].message.content
+    return response.choices[0].message.content or ""
+
+
+@retry(max_attempts=3, delay=2.0)
+async def translate_to_korean(text: str) -> str:
+    client = get_openrouter_client()
+    response = await client.chat.completions.create(
+        model="arcee-ai/trinity-large-preview:free",
+        messages=[
+            {
+                "role": "system",
+                "content": "You are a professional translator specializing in academic papers.",
+            },
+            {
+                "role": "user",
+                "content": TRANSLATE_PROMPT.format(text=text),
+            },
+        ],
+    )
+    return response.choices[0].message.content or ""
 
 
 @retry(max_attempts=3, delay=2.0)
@@ -59,7 +88,7 @@ async def generate_three_line_summary(detailed_summary: str) -> str:
             },
         ],
     )
-    return response.choices[0].message.content
+    return response.choices[0].message.content or ""
 
 
 @retry(max_attempts=3, delay=2.0)
@@ -78,13 +107,14 @@ async def generate_bullet_summary(detailed_summary: str) -> list[str]:
             },
         ],
     )
-    content = response.choices[0].message.content
+    content = response.choices[0].message.content or ""
     lines = [line.strip() for line in content.split("\n") if line.strip()]
     return lines
 
 
 async def generate_summaries(paper_text: str) -> tuple[str, str, list[str]]:
     detailed = await generate_detailed_summary(paper_text)
-    three_line = await generate_three_line_summary(detailed)
-    bullet = await generate_bullet_summary(detailed)
-    return detailed, three_line, bullet
+    detailed_korean = await translate_to_korean(detailed)
+    three_line = await generate_three_line_summary(detailed_korean)
+    bullet = await generate_bullet_summary(detailed_korean)
+    return detailed_korean, three_line, bullet
