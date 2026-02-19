@@ -119,15 +119,15 @@ with tab1:
                 tab3, tab4, tab5 = st.tabs(["3-Line", "Bullet", "Detailed"])
 
                 with tab3:
-                    st.write(result.get("three_line_summary", ""))
+                    st.markdown(result.get("three_line_summary", ""))
 
                 with tab4:
                     bullets = result.get("bullet_summary", [])
                     for b in bullets:
-                        st.write(f"• {b}")
+                        st.markdown(f"- {b}")
 
                 with tab5:
-                    st.write(result.get("detailed_summary", ""))
+                    st.markdown(result.get("detailed_summary", ""))
 
 with tab2:
     st.subheader("Saved Papers")
@@ -141,11 +141,11 @@ with tab2:
                 st.markdown(f"**arXiv ID:** {paper.get('arxiv_id')}")
                 st.markdown(f"**Authors:** {', '.join(paper.get('authors', []))}")
                 st.markdown("**3-Line Summary:**")
-                st.write(paper.get("three_line_summary", ""))
+                st.markdown(paper.get("three_line_summary", ""))
                 if paper.get("bullet_summary"):
                     st.markdown("**Bullet Summary:**")
                     for b in paper.get("bullet_summary", []):
-                        st.write(f"• {b}")
+                        st.markdown(f"- {b}")
                 if paper.get("detailed_summary"):
                     with st.expander("Detailed Summary"):
-                        st.write(paper.get("detailed_summary"))
+                        st.markdown(paper.get("detailed_summary"))

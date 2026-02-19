@@ -15,19 +15,19 @@ DETAILED_PROMPT = """You are an expert academic paper analyst. Analyze the follo
 5. analysis or limitations
 6. any other paper specific noteworthy points
 
-Provide your analysis in Korean:"""
+Use markdown formatting (## for headers, **bold**, - for bullet lists). Provide your analysis in Korean:"""
 
-THREE_LINE_PROMPT = """Based on the following detailed paper analysis, summarize it into exactly 3 lines in Korean. Each line should be a complete thought:
-
-{detailed_summary}
-
-Provide exactly 3 lines, nothing more:"""
-
-BULLET_PROMPT = """Based on the following detailed paper analysis, create a brief summary using bullet points in Korean:
+THREE_LINE_PROMPT = """Based on the following detailed paper analysis, summarize it into exactly 3 lines in Korean. Use numbered list format (1., 2., 3.). Each line should be a complete thought:
 
 {detailed_summary}
 
-Provide 3-5 bullet points:"""
+Provide exactly 3 lines in numbered format, nothing more:"""
+
+BULLET_PROMPT = """Based on the following detailed paper analysis, create a brief summary using bullet points in Korean. Use markdown bullet list format (- item):
+
+{detailed_summary}
+
+Provide 3-5 bullet points in markdown format:"""
 
 
 @retry(max_attempts=3, delay=2.0)

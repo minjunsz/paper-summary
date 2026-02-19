@@ -14,7 +14,9 @@ def retry(max_attempts: int = 3, delay: float = 1.0):
                     last_exception = e
                     if attempt < max_attempts - 1:
                         await asyncio.sleep(delay * (attempt + 1))
-            raise last_exception
+            if last_exception:
+                raise last_exception
+            raise RuntimeError("Retry failed with no exception")
 
         return wrapper
 
