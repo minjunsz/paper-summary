@@ -14,9 +14,11 @@ def get_metadata(arxiv_id: str):
         return {"error": str(e)}
 
 
-def summarize_paper(arxiv_id: str):
+def summarize_paper(arxiv_id: str, force: bool = False):
     try:
-        resp = httpx.post(f"{API_BASE}/api/paper/{arxiv_id}/summarize", timeout=600)
+        resp = httpx.post(
+            f"{API_BASE}/api/paper/{arxiv_id}/summarize?force={force}", timeout=600
+        )
         resp.raise_for_status()
         return resp.json()
     except Exception as e:
@@ -103,16 +105,28 @@ with tab1:
 
                 if "error" in result:
                     progress_placeholder.error(f"Error: {result['error']}")
-                    if st.button("Retry"):
-                        st.rerun()
                 else:
                     progress_placeholder.success("Summarization complete!")
-
                     st.session_state.result = result
                     st.session_state.show_result = True
 
             if st.session_state.get("show_result") and st.session_state.get("result"):
                 result = st.session_state.result
+
+                if result.get("is_cached"):
+                    st.info("📌 이 논문은 이미 요약되어 있습니다")
+                    if st.button("Regenerate Summary", key="regen_cached"):
+                        progress_placeholder = st.empty()
+                        progress_placeholder.info("Regenerating summary...")
+
+                        result = summarize_paper(st.session_state.arxiv_id, force=True)
+
+                        if "error" in result:
+                            progress_placeholder.error(f"Error: {result['error']}")
+                        else:
+                            progress_placeholder.success("Summary regenerated!")
+                            st.session_state.result = result
+                        st.rerun()
 
                 st.markdown("### Summary Results")
 

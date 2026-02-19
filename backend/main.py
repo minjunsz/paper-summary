@@ -45,6 +45,7 @@ class PaperResponse(BaseModel):
     three_line_summary: str | None = None
     bullet_summary: list[str] | None = None
     created_at: datetime | None = None
+    is_cached: bool = False
 
 
 class PaperListResponse(BaseModel):
@@ -77,10 +78,19 @@ async def get_paper_metadata(arxiv_id: str):
 
 
 @app.post("/api/paper/{arxiv_id}/summarize", response_model=PaperResponse)
-async def summarize_paper(arxiv_id: str, db: Session = Depends(get_db)):
+async def summarize_paper(
+    arxiv_id: str, force: bool = False, db: Session = Depends(get_db)
+):
     extracted_id = extract_arxiv_id(arxiv_id)
     if not extracted_id:
         raise HTTPException(status_code=400, detail="Invalid arXiv ID")
+
+    if force:
+        existing = db.query(Paper).filter(Paper.arxiv_id == extracted_id).first()
+        if existing:
+            db.delete(existing)
+            db.commit()
+            db.expire_all()
 
     existing = db.query(Paper).filter(Paper.arxiv_id == extracted_id).first()
     if existing:
@@ -93,6 +103,7 @@ async def summarize_paper(arxiv_id: str, db: Session = Depends(get_db)):
             three_line_summary=existing.three_line_summary,
             bullet_summary=existing.get_bullet_summary_list(),
             created_at=existing.created_at,
+            is_cached=True,
         )
 
     try:
@@ -141,6 +152,7 @@ async def summarize_paper(arxiv_id: str, db: Session = Depends(get_db)):
         three_line_summary=paper.three_line_summary,
         bullet_summary=paper.get_bullet_summary_list(),
         created_at=paper.created_at,
+        is_cached=False,
     )
 
 
