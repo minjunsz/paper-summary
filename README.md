@@ -39,3 +39,12 @@ All three results (detailed analysis in Korean, 3 lines summary, and bullet-poin
 5. The summarized paper should be saved into a DB so that user can retrieve the three results once they summarize a paper. (sqlite might be enough)
 6. User can see all three types of results (at first, 3-line summary is only visible, and if the user clicks buttons, tabs, or accordians, the rest are shown.)
 
+## How to Run
+
+```bash
+# Backend
+uv run uvicorn backend.main:app --host 0.0.0.0 --port 8001
+
+# Frontend
+uv run streamlit run frontend/app.py --server.headless true
+```

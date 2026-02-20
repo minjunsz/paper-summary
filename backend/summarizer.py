@@ -30,7 +30,7 @@ BULLET_PROMPT = """Based on the following detailed paper analysis, create a brie
 
 {detailed_summary}
 
-Provide 3-5 bullet points in markdown format. 
+Provide bullet points in markdown format that capture the core ideas. The number of bullets should be whatever is needed for a compact but detailed summary - more than a 3-line summary but much more concise than the detailed analysis: 
 IMPORTANT: Only return the bullet points, no introductory text or explanations. Start directly with the bullet points."""
 
 TRANSLATE_PROMPT = """Translate the following academic paper analysis to Korean. 
