@@ -1,5 +1,5 @@
 from openai import AsyncOpenAI
-from backend.config import get_settings
+from backend.settings import get_settings
 
 
 def get_openrouter_client() -> AsyncOpenAI:
