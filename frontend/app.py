@@ -184,7 +184,10 @@ with tab2:
     else:
         for paper in papers:
             with st.expander(f"{paper.get('title', paper.get('arxiv_id'))}"):
-                st.markdown(f"**arXiv ID:** {paper.get('arxiv_id')}")
+                arxiv_id = paper.get("arxiv_id")
+                st.markdown(
+                    f"**arXiv ID:** [{arxiv_id}](https://arxiv.org/pdf/{arxiv_id})"
+                )
                 st.markdown(f"**Authors:** {', '.join(paper.get('authors', []))}")
                 if paper.get("summary_warning"):
                     st.warning(paper["summary_warning"])
