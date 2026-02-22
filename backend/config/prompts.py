@@ -20,7 +20,7 @@ def detailed_summary_user(paper_text: str) -> str:
 
 Use markdown formatting (## for headers, **bold**, - for bullet lists). Provide your analysis in Korean:
 
-{paper_text[:15000]}"""
+{paper_text}"""
 
 
 def translate_user(text: str) -> str:

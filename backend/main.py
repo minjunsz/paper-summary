@@ -45,6 +45,7 @@ class PaperResponse(BaseModel):
     detailed_summary: str | None = None
     three_line_summary: str | None = None
     bullet_summary: list[str] | None = None
+    summary_warning: str | None = None
     created_at: datetime | None = None
     is_cached: bool = False
 
@@ -103,6 +104,7 @@ async def summarize_paper(
             detailed_summary=existing.detailed_summary,
             three_line_summary=existing.three_line_summary,
             bullet_summary=existing.get_bullet_summary_list(),
+            summary_warning=existing.summary_warning,
             created_at=existing.created_at,
             is_cached=True,
         )
@@ -125,7 +127,7 @@ async def summarize_paper(
         raise HTTPException(status_code=500, detail=f"Failed to parse PDF: {str(e)}")
 
     try:
-        detailed, three_line, bullet = await generate_summaries(paper_text)
+        detailed, three_line, bullet, warning = await generate_summaries(paper_text)
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Failed to generate summary: {str(e)}"
@@ -139,6 +141,7 @@ async def summarize_paper(
         detailed_summary=detailed,
         three_line_summary=three_line,
         bullet_summary=json.dumps(bullet),
+        summary_warning=warning,
     )
     db.add(paper)
     db.commit()
@@ -152,6 +155,7 @@ async def summarize_paper(
         detailed_summary=paper.detailed_summary,
         three_line_summary=paper.three_line_summary,
         bullet_summary=paper.get_bullet_summary_list(),
+        summary_warning=paper.summary_warning,
         created_at=paper.created_at,
         is_cached=False,
     )
@@ -175,6 +179,7 @@ async def get_paper(arxiv_id: str, db: Session = Depends(get_db)):
         detailed_summary=paper.detailed_summary,
         three_line_summary=paper.three_line_summary,
         bullet_summary=paper.get_bullet_summary_list(),
+        summary_warning=paper.summary_warning,
         created_at=paper.created_at,
     )
 
@@ -192,6 +197,7 @@ async def list_papers(db: Session = Depends(get_db)):
                 detailed_summary=p.detailed_summary,
                 three_line_summary=p.three_line_summary,
                 bullet_summary=p.get_bullet_summary_list(),
+                summary_warning=p.summary_warning,
                 created_at=p.created_at,
             )
             for p in papers
@@ -246,6 +252,7 @@ async def search_papers(q: str, limit: int = 20, db: Session = Depends(get_db)):
                 detailed_summary=p.detailed_summary,
                 three_line_summary=p.three_line_summary,
                 bullet_summary=p.get_bullet_summary_list(),
+                summary_warning=p.summary_warning,
                 created_at=p.created_at,
             )
             for p in top_papers

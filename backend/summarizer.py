@@ -94,9 +94,28 @@ async def generate_bullet_summary(detailed_summary: str) -> list[str]:
     return lines
 
 
-async def generate_summaries(paper_text: str) -> tuple[str, str, list[str]]:
-    detailed = await generate_detailed_summary(paper_text)
-    detailed_korean = await translate_to_korean(detailed)
-    three_line = await generate_three_line_summary(detailed_korean)
-    bullet = await generate_bullet_summary(detailed_korean)
-    return detailed_korean, three_line, bullet
+LENGTH_WARNING_THRESHOLD = 100_000
+
+
+async def generate_summaries(
+    paper_text: str,
+) -> tuple[str, str, list[str], str | None]:
+    warning = None
+
+    if len(paper_text) > LENGTH_WARNING_THRESHOLD:
+        warning = (
+            f"⚠️ Paper is long ({len(paper_text):,} chars), summary may be incomplete"
+        )
+
+    try:
+        detailed = await generate_detailed_summary(paper_text)
+        detailed_korean = await translate_to_korean(detailed)
+        three_line = await generate_three_line_summary(detailed_korean)
+        bullet = await generate_bullet_summary(detailed_korean)
+    except Exception as e:
+        error_msg = str(e)
+        if "context" in error_msg.lower() or "tokens" in error_msg.lower():
+            warning = f"⚠️ Context limit exceeded: {error_msg}"
+        raise
+
+    return detailed_korean, three_line, bullet, warning

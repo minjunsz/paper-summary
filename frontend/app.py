@@ -141,6 +141,9 @@ with tab1:
 
                 st.markdown("### Summary Results")
 
+                if result.get("summary_warning"):
+                    st.warning(result["summary_warning"])
+
                 tab3, tab4, tab5 = st.tabs(["3-Line", "Bullet", "Detailed"])
 
                 with tab3:
@@ -183,6 +186,8 @@ with tab2:
             with st.expander(f"{paper.get('title', paper.get('arxiv_id'))}"):
                 st.markdown(f"**arXiv ID:** {paper.get('arxiv_id')}")
                 st.markdown(f"**Authors:** {', '.join(paper.get('authors', []))}")
+                if paper.get("summary_warning"):
+                    st.warning(paper["summary_warning"])
                 st.markdown("**3-Line Summary:**")
                 st.markdown(paper.get("three_line_summary", ""))
                 if paper.get("bullet_summary"):

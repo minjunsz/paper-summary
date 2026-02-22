@@ -19,6 +19,7 @@ class Paper(Base):
     detailed_summary: Mapped[str | None] = mapped_column(Text)
     three_line_summary: Mapped[str | None] = mapped_column(Text)
     bullet_summary: Mapped[str | None] = mapped_column(Text)
+    summary_warning: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     def get_authors_list(self) -> list[str]:
